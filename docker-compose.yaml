@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  pd:
+    image: "pingcap/pd:latest"
+    restart: on-failure
+    network_mode: "host"
+    ports:
+      - "2379:2379"
+    command:
+      - --name=pd
+      - --client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://127.0.0.2:2379
+
+  tikv:
+    image: "pingcap/tikv:latest"
+    restart: on-failure
+    network_mode: "host"
+    ports:
+      - "20160:20160"
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=127.0.0.1:20160
+      - --pd=127.0.0.1:2379

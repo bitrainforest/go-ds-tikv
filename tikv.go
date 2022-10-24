@@ -9,6 +9,7 @@ import (
 	"github.com/tikv/client-go/v2/rawkv"
 	"github.com/tikv/client-go/v2/txnkv"
 	"github.com/tikv/client-go/v2/txnkv/transaction"
+	"golang.org/x/sync/errgroup"
 	"time"
 )
 
@@ -74,8 +75,57 @@ func (d *Datastore) GetSize(ctx context.Context, key datastore.Key) (size int, e
 	return len(val), nil
 }
 
-func (d *Datastore) Query(_ context.Context, _ query.Query) (query.Results, error) {
-	return nil, fmt.Errorf("not implemented")
+func (d *Datastore) Query(ctx context.Context, q query.Query) (query.Results, error) {
+	if q.Orders != nil || q.Filters != nil {
+		return nil, fmt.Errorf("s3ds: filters or orders are not supported")
+	}
+
+	var startKey []byte
+	if q.Prefix != "" {
+		startKey = []byte(q.Prefix)
+	}
+
+	var opts []rawkv.ScanOption
+	if q.KeysOnly && !q.ReturnsSizes {
+		opts = append(opts, rawkv.ScanKeyOnly())
+	}
+
+	keys, values, err := d.raw.Scan(ctx, startKey, nil, q.Limit, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	var index int
+
+	nextValue := func() (query.Result, bool) {
+		if index >= len(keys) {
+			return query.Result{}, false
+		}
+		ent := query.Entry{
+			Key: string(keys[index]),
+		}
+		if !q.KeysOnly {
+			ent.Value = values[index]
+		}
+		if q.ReturnsSizes {
+			ent.Size = len(values[index])
+		}
+		if q.ReturnExpirations {
+			exp, err := d.GetExpiration(ctx, datastore.NewKey(ent.Key))
+			if err != nil {
+				return query.Result{Error: err}, true
+			}
+			ent.Expiration = exp
+		}
+		return query.Result{Entry: ent}, true
+	}
+
+	return query.ResultsFromIterator(q, query.Iterator{
+		Close: func() error {
+			return nil
+		},
+		Next: nextValue,
+	}), nil
 }
 
 func (d *Datastore) Put(ctx context.Context, key datastore.Key, value []byte) error {
@@ -105,7 +155,14 @@ func (d *Datastore) Sync(_ context.Context, _ datastore.Key) error {
 }
 
 func (d *Datastore) Close() error {
-	return d.client.Close()
+	grp, _ := errgroup.WithContext(context.TODO())
+	grp.Go(func() error {
+		return d.client.Close()
+	})
+	grp.Go(func() error {
+		return d.raw.Close()
+	})
+	return grp.Wait()
 }
 
 func (d *Datastore) Batch(_ context.Context) (datastore.Batch, error) {

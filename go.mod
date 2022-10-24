@@ -1,9 +1,9 @@
-module github.com/bitrainforest/go-ds-tikv
+module github.com/gh-efforts/go-ds-tikv
 
 go 1.18
 
 require (
-	github.com/ipfs/go-datastore v0.5.1
+	github.com/ipfs/go-datastore v0.6.0
 	github.com/tikv/client-go/v2 v2.0.1
 )
 
@@ -34,6 +34,7 @@ require (
 	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
+	github.com/tikv/client-go v1.0.0 // indirect
 	github.com/tikv/pd/client v0.0.0-20220216070739-26c668271201 // indirect
 	github.com/twmb/murmur3 v1.1.3 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.2 // indirect

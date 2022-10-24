@@ -18,7 +18,10 @@ services:
     network_mode: "host"
     ports:
       - "20160:20160"
+    volumes:
+      - ./tikv-config.toml:/tmp/tikv-config.toml
     command:
       - --addr=0.0.0.0:20160
       - --advertise-addr=127.0.0.1:20160
       - --pd=127.0.0.1:2379
+      - --config=/tmp/tikv-config.toml

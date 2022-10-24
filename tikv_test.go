@@ -28,7 +28,7 @@ var testcases = map[string]string{
 	"/a/d":   "ad",
 	"/e":     "e",
 	"/f":     "f",
-	"/g":     "",
+	//"/g":     "",
 }
 
 func newDS(t *testing.T) *Datastore {
@@ -36,6 +36,7 @@ func newDS(t *testing.T) *Datastore {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	raw, err := rawkv.NewClient(bg, pdAddrs, config.Security{})
 	if err != nil {
 		t.Fatal(err)
@@ -49,6 +50,7 @@ func newDS(t *testing.T) *Datastore {
 
 func addTestCases(t *testing.T, d *Datastore, testcases map[string]string) {
 	for k, v := range testcases {
+		t.Logf("set kv: %s: %s", k, v)
 		dsk := ds.NewKey(k)
 		if err := d.Put(bg, dsk, []byte(v)); err != nil {
 			t.Fatal(err)
@@ -264,60 +266,6 @@ func TestBatching(t *testing.T) {
 	}
 }
 
-func TestBatchingRequired(t *testing.T) {
-
-	d := newDS(t)
-	defer d.Close()
-
-	const valSize = 1000
-
-	// Check that transaction fails when there are too many writes.  This is
-	// not testing batching logic, but is here to prove that batching works
-	// where a transaction fails.
-	t.Logf("putting %d byte values until transaction overflows", valSize)
-	tx, err := d.client.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-	var puts int
-	for ; puts < 10000000; puts++ {
-		buf := make([]byte, valSize)
-		rand.Read(buf)
-		err = tx.Set(ds.NewKey(fmt.Sprintf("/key%d", puts)).Bytes(), buf)
-		if err != nil {
-			break
-		}
-		puts++
-	}
-	if err == nil {
-		t.Error("expected transaction to fail")
-	} else {
-		t.Logf("OK - transaction cannot handle %d puts: %s", puts, err)
-	}
-	tx.Rollback() // nolint: errcheck
-
-	// Check that batch succeeds with the same number of writes that caused a
-	// transaction to fail.
-	t.Logf("putting %d %d byte values using batch", puts, valSize)
-	b, err := d.Batch(bg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for i := 0; i < puts; i++ {
-		buf := make([]byte, valSize)
-		rand.Read(buf)
-		err = b.Put(bg, ds.NewKey(fmt.Sprintf("/key%d", i)), buf)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	err = b.Commit(bg)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestBasicPutGet(t *testing.T) {
 	d := newDS(t)
 	defer d.Close() // nolint: errcheck
@@ -505,7 +453,7 @@ func TestTTL(t *testing.T) {
 	for key, value := range data {
 		err := d.PutWithTTL(bg, key, value, time.Second)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("PutWithTTL: %s", err)
 		}
 	}
 

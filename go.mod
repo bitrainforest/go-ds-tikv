@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/ipfs/go-datastore v0.6.0
 	github.com/tikv/client-go/v2 v2.0.1
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
 require (
@@ -34,7 +35,6 @@ require (
 	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
-	github.com/tikv/client-go v1.0.0 // indirect
 	github.com/tikv/pd/client v0.0.0-20220216070739-26c668271201 // indirect
 	github.com/twmb/murmur3 v1.1.3 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.2 // indirect
@@ -44,9 +44,8 @@ require (
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.20.0 // indirect
 	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
+	golang.org/x/text v0.3.8 // indirect
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
 	google.golang.org/grpc v1.43.0 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
